@@ -1,8 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 30 15:12:14 2017
+Project title: Repurposing defensive technologies for offensive Red Team operations
+Authors:       Kristiyan Mladenov, Arne Zismer
+Date:          February 12, 2017
 
-@author: hopfenzapfen
+Description:
+               This script processes the pcap files captured by the
+               perform_os_scans.py script.
+               For each pcap file it keeps track of which ports the Nmap scan
+               contacted before reaching the target port.
+               The results are presented in a bar chart.
 """
 
 pcap_name = "test.pcap"
@@ -18,12 +25,17 @@ import matplotlib.pyplot as plt
 
 def get_pcap_files():
     """
-    returns a list of all files inside the pcap_dir
+    Returns a list of all files inside the pcap_dir
     """
     return [join(pcap_dir, f) for f in listdir(pcap_dir) if isfile(join(pcap_dir, f))]
 
 
 def print_results(ports):
+    """
+    Prints the results in a simple table
+    """
+
+
     print "port\tcount"
     print "----------------------"
     for port in ports:
@@ -34,6 +46,9 @@ def print_results(ports):
 
 
 def plot_results(ports):
+    """
+    Draws the bar chart
+    """
 
     # convert tuple list to two separate lists: the ports and its frequencies
     port_numbers, port_frequencies = [list(t) for t in zip(*ports)]
@@ -50,6 +65,10 @@ def plot_results(ports):
 
 
 def parse_pcaps():
+    """
+    Iterates over all pcap files, registers all ports that are contacted before
+    target port is reached, per file.
+    """
 
     # get pcap files from directory
     ports = {}
@@ -81,13 +100,11 @@ def parse_pcaps():
                         ports[port] = 1
         f.close()
 
-
     # convert dict to list of tuples so it can be sorted
     ports_list = []
     for port in ports:
         port_tuple = (port, ports[port])
         ports_list.append(port_tuple)
-
 
     # sort list
     return sorted(ports_list, key=lambda x: x[1], reverse=True)
@@ -98,6 +115,4 @@ if __name__ == "__main__":
     print_results(scanned_ports)
     plot_results(scanned_ports)
 
-#    test()
-
-    print "\n\ndone"
+    print "\ndone"

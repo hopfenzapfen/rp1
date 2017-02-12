@@ -1,11 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 30 15:12:14 2017
+Project title: Repurposing defensive technologies for offensive Red Team operations
+Authors:       Kristiyan Mladenov, Arne Zismer
+Date:          February 12, 2017
 
-@author: hopfenzapfen
+Description:
+               This script processes the pcap files captured by the
+               perform_os_scans.py script.
+               For each pcap file it checks whether one of the target ports was
+               found to be open. After processing all pcap files, the script visualises
+               the ratio of times the port was opened or closed in  a pie chart.
 """
 
-#pcap_name = "test.pcap"
 pcap_dir = "pcaps_80_open"
 target_ports = [80]
 label_font_size = 15
@@ -17,7 +23,7 @@ import matplotlib.pyplot as plt
 
 def get_pcap_files():
     """
-    returns a list of all files inside the pcap_dir
+    Returns a list of all files inside the pcap_dir
     """
     return [join(pcap_dir, f) for f in listdir(pcap_dir) if isfile(join(pcap_dir, f))]
 
@@ -27,10 +33,9 @@ def print_results(ports):
 
 
 def plot_results(ports):
-
-    # make a square figure and axes
-#    figure(1, figsize=(6,6))
-#    ax =plt.axes([0.1, 0.1, 0.8, 0.8])
+    """
+    Draw a pie chart
+    """
 
     # The slices will be ordered and plotted counter-clockwise.
     open_frac = ports[1] / float(ports[0])
@@ -42,17 +47,15 @@ def plot_results(ports):
 
     plt.pie(fracs, explode=explode, labels=labels, colors=['green', 'red'],
                     autopct='%1.1f%%', shadow=True, startangle=170)
-                    # The default startangle is 0, which would start
-                    # the Frogs slice on the x-axis.  With startangle=90,
-                    # everything is rotated counter-clockwise by 90 degrees,
-                    # so the plotting starts on the positive y-axis.
-
     plt.title('Reachability of port %d' % (target_ports[0]))
-
     plt.show()
 
 
 def parse_pcaps():
+    """
+    Iterate over all pcap files and check whether target ports were opened or closed
+    Returns a tuple of (<total_scans>, <open_ports_count>)
+    """
 
     # get pcap files from directory
     pcap_file_names = get_pcap_files()
@@ -61,7 +64,6 @@ def parse_pcaps():
 
     # iterate over pcap file
     for pcap_file_name in pcap_file_names:
-#        print("reading %s" % pcap_file_name)
         f = open(pcap_file_name)
         pcap_file = pcap.Reader(f)
         total_scans += 1
@@ -75,6 +77,7 @@ def parse_pcaps():
             try:
                 if (type(ip.data) is tcp.TCP and ip.data.sport in target_ports):
 
+                    # SYN,ACK flag indicates that port is open
                     if (ip.data.flags == 18):
                         open_target_ports += 1
                         print ("Found open port %d with flag %d" % (ip.data.sport, ip.data.flags))
@@ -83,7 +86,6 @@ def parse_pcaps():
                 pass
         f.close()
 
-#    return (1000, 205)
     return (total_scans, open_target_ports)
 
 
@@ -92,6 +94,4 @@ if __name__ == "__main__":
     print_results(open_ports)
     plot_results(open_ports)
 
-#    test()
-
-    print "\n\ndone"
+    print "\ndone"
